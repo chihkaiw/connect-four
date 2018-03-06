@@ -1,7 +1,5 @@
 package connect.model;
 
-
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -72,6 +70,33 @@ public class BoardTest {
   public void dropDisc_DropRedDisc_CanFindRedDisc() {
     board.dropDisc(1, Disc.RED);
     Assert.assertEquals(Disc.RED, board.getDisc(1, 1));
+  }
+
+  @Test
+  public void undoPreviousMove_UndoSingleDisc_ShouldUndo() {
+      board.dropDisc(1, Disc.RED);
+      board.undoPreviousMove();
+      Assert.assertEquals(Disc.NONE, board.getDisc(1, 1));
+  }
+ 
+  @Test
+  public void undoPreviousMove_UndoMultipleDisc_ShouldUndo() {
+      board.dropDisc(1, Disc.RED);
+      board.dropDisc(1, Disc.RED);
+      board.dropDisc(1, Disc.RED);
+
+      board.undoPreviousMove();
+      board.undoPreviousMove();
+
+      Assert.assertEquals(Disc.RED, board.getDisc(1, 1));
+      Assert.assertEquals(Disc.NONE, board.getDisc(2, 1));
+      Assert.assertEquals(Disc.NONE, board.getDisc(3, 1));
+  }
+
+  @Test
+  public void undoPreviousMove_BoardIsEmpty_ShouldNotUndo() {
+      board.undoPreviousMove();
+      Assert.assertEquals(Disc.NONE, board.getDisc(1, 1));
   }
 
 

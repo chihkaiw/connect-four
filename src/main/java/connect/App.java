@@ -6,6 +6,7 @@ import connect.constant.Const;
 import connect.model.Board;
 import connect.model.Disc;
 import connect.model.Player;
+import connect.model.PlayerInputType;
 import connect.utils.Judge;
 
 public class App {
@@ -32,19 +33,7 @@ public class App {
 
   public static void main(String[] args) {
     App app = new App();
-    if (app.readyForPlay()) {
-      app.play();
-    }
-  }
-
-  /**
-   * Check initialization is completed or not.
-   *
-   * @return true if initialization is done and ready for play, otherwise return false.
-   */
-  private boolean readyForPlay() {
-    return (null != scanner && null != judge && null != gameBoard && null != players
-        && players.length == NUMBER_OF_PLAYERS);
+    app.play();
   }
 
   /**
@@ -67,10 +56,15 @@ public class App {
    */
   private Player action() {
     Player currentPlayer = players[currentPlayerCounter];
-    int inputColumn = getUserInput(currentPlayer);
-    gameBoard.dropDisc(inputColumn, currentPlayer.getDisc());
-    gameBoard.showBoard();
-    return judge.checkWin(gameBoard, currentPlayer.getDisc()) ? currentPlayer : null;
+    PlayerInputType playerInputType = getUserInput(currentPlayer);
+
+    if(playerInputType.equals(PlayerInputType.UNDO)) {
+      gameBoard.undoPreviousMove();
+      return null;
+    }else {
+      gameBoard.dropDisc(Integer.parseInt(playerInputType.getValue()), currentPlayer.getDisc());
+      return judge.checkWin(gameBoard, currentPlayer.getDisc()) ? currentPlayer : null;
+    }
   }
 
   /**
@@ -79,30 +73,47 @@ public class App {
    * @param currentPlayer
    * @return column number.
    */
-  private int getUserInput(Player currentPlayer) {
-    int inputAsInt = 0;
-    announceChooseColumn(currentPlayer);
+  private PlayerInputType getUserInput(Player currentPlayer) {
+    String input;
+    PlayerInputType playerInputType = null;
 
-    outerLoop: while (true) {
-      while (!scanner.hasNextInt()) {
-        announcement(Const.INPUT_NOT_NUMBER);
-        announceChooseColumn(currentPlayer);
-        scanner.next();
+    while (true) {
+      announceChooseColumn(currentPlayer);
+      input = scanner.next();
+      playerInputType= getPlayerInputTypeFromScannerIn(input);
+      if(playerInputType!=null) {
+        break;
       }
-      inputAsInt = scanner.nextInt();
-
-      if (inputAsInt < 1 || inputAsInt > NUMBER_OF_COLUMNS) {
-        announcement(String.format(Const.INPUT_OVER_BOUNDARY, NUMBER_OF_COLUMNS));
-        announceChooseColumn(currentPlayer);
-      } else if (gameBoard.isColumnsFull(inputAsInt)) {
-        announcement(String.format(Const.INPUT_COLUMN_IS_FULL, inputAsInt));
-        announceChooseColumn(currentPlayer);
-      } else {
-        break outerLoop;
-      }
-      continue;
     }
-    return inputAsInt;
+    return playerInputType;
+  }
+
+  private PlayerInputType getPlayerInputTypeFromScannerIn(String input) {
+    if(input.equalsIgnoreCase(PlayerInputType.UNDO.getValue())) {
+      return PlayerInputType.UNDO;
+    }else {
+      try {
+        int inputAsInt = Integer.parseInt(input);
+        if (inputAsInt < 1 || inputAsInt > NUMBER_OF_COLUMNS) {
+          announcement(String.format(Const.INPUT_OVER_BOUNDARY, NUMBER_OF_COLUMNS));
+        } else if (gameBoard.isColumnsFull(inputAsInt)) {
+          announcement(String.format(Const.INPUT_COLUMN_IS_FULL, inputAsInt));
+        }else {
+          switch (input) {
+            case "1": return PlayerInputType.ONE;
+            case "2": return PlayerInputType.TWO;
+            case "3": return PlayerInputType.THREE;
+            case "4": return PlayerInputType.FOUR;
+            case "5": return PlayerInputType.FIVE;
+            case "6": return PlayerInputType.SIX;
+            case "7": return PlayerInputType.SEVEN;
+          }
+        }
+      }catch(Exception e) {
+        System.out.println(Const.INPUT_NOT_ALLOWED);
+      }
+    	}
+    return null;
   }
 
   /**
@@ -136,4 +147,3 @@ public class App {
         String.format(Const.INPUT_CHOOSE_COLUMN, player.getName(), player.getDisc().toString()));
   }
 }
-

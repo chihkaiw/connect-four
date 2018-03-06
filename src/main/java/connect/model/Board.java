@@ -1,9 +1,13 @@
 package connect.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import connect.constant.Const;
 
 public class Board {
 
+  private List<Position> moveRecord;
   private Disc[][] gameBoard;
   private int counter = 0;
   private int rowSize;
@@ -14,6 +18,7 @@ public class Board {
     this.colSize = colSize;
     this.gameBoard = initBoard(rowSize, colSize);
     this.counter = rowSize * colSize;
+    this.moveRecord = new ArrayList<>();
   }
 
   /**
@@ -91,10 +96,25 @@ public class Board {
     for (int i = 0; i < gameBoard.length; i++) {
       if (gameBoard[i][col - 1].equals(Disc.NONE)) {
         gameBoard[i][col - 1] = disc;
+        moveRecord.add(new Position(i+1,col,disc));
         counter--;
         break;
       }
     }
+    showBoard();
+  }
+
+  /**
+   * Undo Previous Move.
+   */
+  public void undoPreviousMove() {
+    int size = moveRecord.size();
+    if(size > 0) {
+      Position positionShouldRemove = moveRecord.remove(size-1);
+      gameBoard[positionShouldRemove.getRow()-1][positionShouldRemove.getCol()-1]=Disc.NONE;
+      counter++;
+    }
+    showBoard();
   }
 
   /**
